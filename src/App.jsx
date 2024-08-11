@@ -9,11 +9,13 @@ import TokenDetailsPage from './pages/TokenDetailsPage ';
 import Converter from './pages/Converter';
 import AuthPage from './pages/AuthPage';
 import HelpSupport from './components/HelpSupport';
+import ScrollToTop from './components/ScrollToTop';
 // #FF900D
 
 const App = () => {
   return (
     <Router>
+      <ScrollToTop />
       <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-grow">

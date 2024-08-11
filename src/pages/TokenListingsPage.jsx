@@ -16,6 +16,9 @@ const TokenListingsPage = () => {
     const interval = setInterval(fetchTokens, 60000); // Refresh every minute
     return () => clearInterval(interval);
   }, [sortBy]);
+  // const rapidApiKey = process.env.REACT_APP_RAPID_API_KEY;
+  const rapidApiKey = import.meta.env.VITE_RAPID_API_KEY;
+
 
   const fetchTokens = async () => {
     setLoading(true);
@@ -33,7 +36,7 @@ const TokenListingsPage = () => {
           offset: '0'
         },
         headers: {
-          'x-rapidapi-key': '21c78fe1b5msh3cc9f4949cc2f42p118a2bjsn636663894f1f',
+          'x-rapidapi-key': rapidApiKey,
           'x-rapidapi-host': 'coinranking1.p.rapidapi.com'
         }
       };

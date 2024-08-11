@@ -17,6 +17,8 @@ const TokenDetailsPage = () => {
   useEffect(() => {
     fetchTokenDetails();
   }, [id]);
+  const rapidApiKey = import.meta.env.VITE_RAPID_API_KEY;
+
 
   const fetchTokenDetails = async () => {
     setLoading(true);
@@ -26,7 +28,7 @@ const TokenDetailsPage = () => {
         url: `https://coinranking1.p.rapidapi.com/coin/${id}`,
         params: { referenceCurrencyUuid: 'yhjMzLPhuIDl', timePeriod: '24h' },
         headers: {
-          'x-rapidapi-key': '21c78fe1b5msh3cc9f4949cc2f42p118a2bjsn636663894f1f',
+          'x-rapidapi-key': rapidApiKey,
           'x-rapidapi-host': 'coinranking1.p.rapidapi.com'
         }
       };
