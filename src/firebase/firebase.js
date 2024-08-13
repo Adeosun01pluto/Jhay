@@ -1,3 +1,6 @@
+const firebaApiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+
+
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
@@ -9,7 +12,7 @@ import { getFirestore } from "firebase/firestore";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyAEzBavrozlvMHlT7NdvQxH5SWGa-637G8",
+  apiKey: firebaApiKey,
   authDomain: "jhayexchange-65002.firebaseapp.com",
   projectId: "jhayexchange-65002",
   storageBucket: "jhayexchange-65002.appspot.com",

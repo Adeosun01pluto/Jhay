@@ -25,7 +25,6 @@ const Header = () => {
     return () => unsubscribe();
   }, []);
 
-  console.log(isUserLoggedIn)
   const signUserOut = async () => {
     try {
       await signOut(auth);
@@ -34,6 +33,10 @@ const Header = () => {
     } catch (error) {
       console.error('Error signing out:', error.message);
     }
+  };
+  const toggleMenu = () => {
+    setIsMenuOpen(false)
+    console.log("is Open menu " ,isMenuOpen)
   };
 
   const handleSearch = async (e) => {
@@ -112,10 +115,15 @@ const Header = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-[#FF900D] py-4">
           <div className="container mx-auto px-4 flex flex-col space-y-4">
-            <Link to="/tokens" className="hover:text-[#fff] text-[#ff] font-semibold transition">Tokens</Link>
-            <Link to="/convert" className="hover:text-[#ff] text-[#ff] font-semibold transition">Convert</Link>
-            <Link to="/blogs" className="hover:text-[#ff] text-[#ff] font-semibold transition">Blogs</Link>
-            <Link to="/help" className="hover:text-[#ff] text-[#ff] font-semibold transition">Help</Link>
+            <Link onClick={()=>toggleMenu()} to="/tokens" className="hover:text-[#fff] text-[#ff] font-semibold transition">Tokens</Link>
+            <Link onClick={()=>toggleMenu()} to="/convert" className="hover:text-[#ff] text-[#ff] font-semibold transition">Convert</Link>
+            <Link onClick={()=>toggleMenu()} to="/blogs" className="hover:text-[#ff] text-[#ff] font-semibold transition">Blogs</Link>
+            {
+              isAdmin ? 
+              <Link onClick={()=>toggleMenu()} to="/dashboard" className="hover:text-[#ff] text-[#ff] font-semibold transition">Dashboard</Link>
+               : null
+            }
+            <Link onClick={()=>toggleMenu()} to="/help" className="hover:text-[#ff] text-[#ff] font-semibold transition">Help</Link>
             <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
@@ -129,7 +137,7 @@ const Header = () => {
               </button>
             </form>
             {!isUserLoggedIn ? (
-              <Link to="/signin" className="bg-white text-[#FF900D] py-2 px-4 rounded-full font-semibold transition">Sign In</Link>
+              <Link onClick={()=>toggleMenu()} to="/signin" className="bg-white text-[#FF900D] py-2 px-4 rounded-full font-semibold transition">Sign In</Link>
             ) : (
               <button onClick={signUserOut} className="bg-white text-[#FF900D] py-2 px-4 rounded-full font-semibold transition">Logout</button>
             )}
