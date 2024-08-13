@@ -59,8 +59,8 @@ const HelpSupport = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="container mx-auto md:px-4">
         <h1 className="text-4xl font-bold text-center mb-12">Help & Support</h1>
 
         {/* FAQ Section */}
@@ -74,7 +74,7 @@ const HelpSupport = () => {
         </section>
 
         {/* Contact Support Section */}
-        <div className="min-h-screen py-12 sm:px-6 lg:px-8">
+        <div className="min-h-screen py-6 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-4xl font-bold text-center mb-12">Contact Us</h1>
             <div className="bg-white rounded-lg shadow-md p-8">
@@ -123,7 +123,7 @@ const HelpSupport = () => {
         </div>
 
         {/* Guides and Tutorials Section */}
-        <section>
+        {/* <section>
           <h2 className="text-2xl font-semibold mb-6">Guides and Tutorials</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {guides.map((guide, index) => (
@@ -137,7 +137,7 @@ const HelpSupport = () => {
               </a>
             ))}
           </div>
-        </section>
+        </section> */}
       </div>
     </div>
   );

@@ -53,6 +53,7 @@ const Header = () => {
         const data = await response.json();
         if (data.data.coins && data.data.coins.length > 0) {
           navigate(`/token/${data.data.coins[0].uuid}`);
+          setIsMenuOpen(false)
         } else {
           alert('No tokens found matching your search.');
         }
@@ -115,15 +116,6 @@ const Header = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-[#FF900D] py-4">
           <div className="container mx-auto px-4 flex flex-col space-y-4">
-            <Link onClick={()=>toggleMenu()} to="/tokens" className="hover:text-[#fff] text-[#ff] font-semibold transition">Tokens</Link>
-            <Link onClick={()=>toggleMenu()} to="/convert" className="hover:text-[#ff] text-[#ff] font-semibold transition">Convert</Link>
-            <Link onClick={()=>toggleMenu()} to="/blogs" className="hover:text-[#ff] text-[#ff] font-semibold transition">Blogs</Link>
-            {
-              isAdmin ? 
-              <Link onClick={()=>toggleMenu()} to="/dashboard" className="hover:text-[#ff] text-[#ff] font-semibold transition">Dashboard</Link>
-               : null
-            }
-            <Link onClick={()=>toggleMenu()} to="/help" className="hover:text-[#ff] text-[#ff] font-semibold transition">Help</Link>
             <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
@@ -136,10 +128,29 @@ const Header = () => {
                 <FaSearch />
               </button>
             </form>
+            <Link onClick={()=>toggleMenu()} to="/tokens" className="hover:text-[#fff] text-[#ff] font-semibold transition">Tokens</Link>
+            <Link onClick={()=>toggleMenu()} to="/convert" className="hover:text-[#ff] text-[#ff] font-semibold transition">Convert</Link>
+            <Link onClick={()=>toggleMenu()} to="/blogs" className="hover:text-[#ff] text-[#ff] font-semibold transition">Blogs</Link>
+            <Link onClick={()=>toggleMenu()} to="/help" className="hover:text-[#ff] text-[#ff] font-semibold transition">Help</Link>
+            {
+              isUserLoggedIn ? 
+                <Link onClick={()=>toggleMenu()} to="/account" className="hover:text-[#ff] text-[#ff] font-semibold transition">
+                  Account
+                </Link>
+                : null
+            }
+            {
+              isAdmin ? 
+              <Link onClick={()=>toggleMenu()} to="/dashboard" className="hover:text-[#ff] text-[#ff] font-semibold transition">Dashboard</Link>
+               : null
+            }
+            
             {!isUserLoggedIn ? (
               <Link onClick={()=>toggleMenu()} to="/signin" className="bg-white text-[#FF900D] py-2 px-4 rounded-full font-semibold transition">Sign In</Link>
             ) : (
-              <button onClick={signUserOut} className="bg-white text-[#FF900D] py-2 px-4 rounded-full font-semibold transition">Logout</button>
+              <div onClick={()=>toggleMenu()}>
+                <button onClick={signUserOut} className="bg-white text-[#FF900D] py-2 px-4 rounded-full font-semibold transition">Logout</button>
+              </div>
             )}
           </div>
         </div>

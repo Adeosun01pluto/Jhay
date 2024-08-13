@@ -116,7 +116,9 @@ const AdminDashboard = () => {
       await updateDoc(doc(db, 'users', id), {
         isAdmin: true,
       });
-      alert('User is now an admin.');
+      if (confirm("Make this user and Admin!")) {
+        alert('User is now an admin.');
+      }
     } catch (error) {
       console.error('Error making user admin: ', error);
     }
@@ -253,34 +255,31 @@ const AdminDashboard = () => {
             </div>
           </Tab.Panel>
           <Tab.Panel className="rounded-xl bg-white p-3 ring-white ring-opacity-60 ring-offset-2 ring-offset-blue-400 focus:outline-none focus:ring-2">
-            <div className="bg-white shadow rounded-lg p-4">
-              <h2 className="text-xl font-semibold mb-4">Manage Users</h2>
-              <form onSubmit={handleAddUser} className="space-y-4 mb-6">
-                <input
-                  className="w-full p-2 border rounded"
-                  placeholder="User Name"
-                  value={newUser.name}
-                  onChange={(e) =>
-                    setNewUser({ ...newUser, name: e.target.value })
-                  }
-                />
-                <input
-                  className="w-full p-2 border rounded"
-                  placeholder="User Email"
-                  type="email"
-                  value={newUser.email}
-                  onChange={(e) =>
-                    setNewUser({ ...newUser, email: e.target.value })
-                  }
-                />
-                <button
-                  type="submit"
-                  className="bg-[#FF900D] text-white px-4 py-2 rounded hover:bg-[#ff8903]"
-                >
-                  Add User
-                </button>
-              </form>
+          <div className="bg-white shadow rounded-lg p-4">
+            <h2 className="text-xl font-semibold mb-4">Manage Users</h2>
+            <form onSubmit={handleAddUser} className="space-y-4 mb-6">
+              <input
+                className="w-full p-2 border rounded"
+                placeholder="User Name"
+                value={newUser.name}
+                onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+              />
+              <input
+                className="w-full p-2 border rounded"
+                placeholder="User Email"
+                type="email"
+                value={newUser.email}
+                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+              />
+              <button
+                type="submit"
+                className="bg-[#FF900D] text-white px-4 py-2 rounded hover:bg-[#ff8903]"
+              >
+                Add User
+              </button>
+            </form>
 
+            <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -301,12 +300,8 @@ const AdminDashboard = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {users.map((user) => (
                     <tr key={user.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {user.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {user.email}
-                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">{user.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {user.isAdmin ? 'Admin' : 'User'}
                       </td>
@@ -325,7 +320,9 @@ const AdminDashboard = () => {
                 </tbody>
               </table>
             </div>
-          </Tab.Panel>
+          </div>
+        </Tab.Panel>
+
         </Tab.Panels>
       </Tab.Group>
     </div>

@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaExchangeAlt, FaShieldAlt, FaChartLine } from 'react-icons/fa';
+import { FaExchangeAlt, FaShieldAlt, FaChartLine, FaArrowUp, FaArrowDown } from 'react-icons/fa';
 import { FaBitcoin, FaEthereum } from 'react-icons/fa';
 import { SiDogecoin } from 'react-icons/si';
 import { SiSolana } from "react-icons/si";
 import { SiBnbchain } from "react-icons/si";
 
 import heroimg from "../assets/jhayhero.png"
+import axios from 'axios';
 
 const featuredTokens = [
   { id: 1, name: 'Bitcoin', symbol: 'BTC', price: '$45,000', change: '+5.2%' },
@@ -18,14 +19,12 @@ const Hero = () => {
   const [tokens, setTokens] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sortBy, setSortBy] = useState('marketCap');
 
   useEffect(() => {
     fetchTokens();
     const interval = setInterval(fetchTokens, 60000); // Refresh every minute
-    console.log(tokens)
     return () => clearInterval(interval);
-  }, [sortBy]);
+  }, []);
   // const rapidApiKey = process.env.REACT_APP_RAPID_API_KEY;
   const rapidApiKey = import.meta.env.VITE_RAPID_API_KEY;
 
@@ -39,8 +38,6 @@ const Hero = () => {
         params: {
           referenceCurrencyUuid: 'yhjMzLPhuIDl',
           timePeriod: '24h',
-          orderBy: "",
-          search: "",
           orderDirection: 'desc',
           limit: '3',
           offset: '0'
@@ -53,14 +50,15 @@ const Hero = () => {
 
       const response = await axios.request(options);
       setTokens(response.data.data.coins);
-      console.log(response.data.data)
+      // console.log(response.data.data)
       setLoading(false);
     } catch (error) {
-      console.error(error);
+      // console.error(error);
       setError('Failed to fetch tokens. Please try again later.');
       setLoading(false);
     }
   };
+  
 
   return (
     <div>
@@ -78,7 +76,7 @@ const Hero = () => {
               </p>
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                 <Link
-                  to="/signup"
+                  to="/signin"
                   className="bg-white text-[#FF900D] py-3 px-8 rounded-full font-semibold hover:bg-blue-100 transition duration-300 shadow-lg text-center"
                 >
                   Get Started
@@ -131,18 +129,32 @@ const Hero = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold mb-8 text-center">Featured Tokens</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {featuredTokens.map((token) => (
-              <div key={token.id} className="bg-white rounded-lg shadow-lg p-6 transition duration-300 hover:shadow-xl">
-                <h3 className="text-xl font-semibold mb-2">{token.name} ({token.symbol})</h3>
-                <p className="text-2xl text-[#FF900D] font-bold">{token.price}</p>
-                <p className={`text-sm ${token.change.startsWith('+') ? 'text-green-500' : 'text-red-500'}`}>
-                  {token.change}
-                </p>
-                <Link to={`/token/${token.id}`} className="mt-4 inline-block text-[#FF900D] hover:underline">
-                  View Details
-                </Link>
-              </div>
-            ))}
+            {tokens.map((token) => {
+              const priceChange = parseFloat(token.change);
+              const priceDirection = priceChange >= 0 ? 'up' : 'down';
+
+              return (
+                <div key={token.uuid} className="bg-white rounded-lg shadow-lg p-6 transition duration-300 hover:shadow-xl">
+                  <h3 className="text-xl font-semibold mb-2">{token.name} ({token.symbol})</h3>
+                  <p className="text-2xl text-[#FF900D] font-bold">$ {parseFloat(token.price).toFixed(3)}</p>
+                  <p
+                    className={`text-lg ${
+                      priceDirection === 'up' ? 'text-green-500' : 'text-red-500'
+                    } flex items-center`}
+                  >
+                    {priceDirection === 'up' ? (
+                      <FaArrowUp className="mr-1" />
+                    ) : (
+                      <FaArrowDown className="mr-1" />
+                    )}
+                    {Math.abs(priceChange)}% ({priceDirection})
+                  </p>
+                  <Link to={`/token/${token.uuid}`} className="mt-4 inline-block text-[#FF900D] hover:underline">
+                    View Details
+                  </Link>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
