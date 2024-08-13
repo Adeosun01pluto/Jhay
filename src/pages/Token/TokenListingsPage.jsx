@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { FaSearch, FaSort, FaFilter } from 'react-icons/fa';
+import { ThreeDots } from 'react-loader-spinner';
 
 const TokenListingsPage = () => {
   const [tokens, setTokens] = useState([]);
@@ -117,7 +118,17 @@ const TokenListingsPage = () => {
 
         {/* Token Cards */}
         {loading ? (
-          <div className="text-center">Loading...</div>
+          <div className="text-center w-[100%] flex items-center justify-center">
+            <ThreeDots
+              visible={true}
+              height="100"
+              width="100"
+              color="#FF900D"
+              ariaLabel="three-circles-loading"
+              wrapperStyle={{}}
+              wrapperClass=""
+              />
+          </div>
         ) : error ? (
           <div className="text-center text-red-500">{error}</div>
         ) : (

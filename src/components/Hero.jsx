@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaExchangeAlt, FaShieldAlt, FaChartLine } from 'react-icons/fa';
 import { FaBitcoin, FaEthereum } from 'react-icons/fa';
@@ -15,6 +15,53 @@ const featuredTokens = [
 ];
 
 const Hero = () => {
+  const [tokens, setTokens] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [sortBy, setSortBy] = useState('marketCap');
+
+  useEffect(() => {
+    fetchTokens();
+    const interval = setInterval(fetchTokens, 60000); // Refresh every minute
+    console.log(tokens)
+    return () => clearInterval(interval);
+  }, [sortBy]);
+  // const rapidApiKey = process.env.REACT_APP_RAPID_API_KEY;
+  const rapidApiKey = import.meta.env.VITE_RAPID_API_KEY;
+
+
+  const fetchTokens = async () => {
+    setLoading(true);
+    try {
+      const options = {
+        method: 'GET',
+        url: 'https://coinranking1.p.rapidapi.com/coins',
+        params: {
+          referenceCurrencyUuid: 'yhjMzLPhuIDl',
+          timePeriod: '24h',
+          orderBy: "",
+          search: "",
+          orderDirection: 'desc',
+          limit: '3',
+          offset: '0'
+        },
+        headers: {
+          'x-rapidapi-key': rapidApiKey,
+          'x-rapidapi-host': 'coinranking1.p.rapidapi.com'
+        }
+      };
+
+      const response = await axios.request(options);
+      setTokens(response.data.data.coins);
+      console.log(response.data.data)
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      setError('Failed to fetch tokens. Please try again later.');
+      setLoading(false);
+    }
+  };
+
   return (
     <div>
       {/* Hero Sectionn */}

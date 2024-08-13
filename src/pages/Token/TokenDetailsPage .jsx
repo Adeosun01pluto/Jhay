@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { FaWhatsapp, FaArrowUp, FaArrowDown } from 'react-icons/fa';
-import CurrencyConverter from '../components/CurrencyConverter';
+import CurrencyConverter from '../Converter/CurrencyConverter';
+import { ThreeDots } from 'react-loader-spinner';
+import useAuth from "../../hooks/useAuth"
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -13,7 +15,7 @@ const TokenDetailsPage = () => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const { user} = useAuth();
   useEffect(() => {
     fetchTokenDetails();
   }, [id]);
@@ -43,7 +45,17 @@ const TokenDetailsPage = () => {
     }
   };
 
-  if (loading) return <div className="text-center py-10">Loading...</div>;
+  if (loading) return <div className="text-center w-[100%] flex items-center justify-center">
+    <ThreeDots
+      visible={true}
+      height="100"
+      width="100"
+      color="#FF900D"
+      ariaLabel="three-circles-loading"
+      wrapperStyle={{}}
+      wrapperClass=""
+      />
+  </div>;
   if (error) return <div className="text-center py-10 text-red-500">{error}</div>;
   if (!token) return <div className="text-center py-10">No token data available.</div>;
 
@@ -137,14 +149,17 @@ const TokenDetailsPage = () => {
                 </button>
               </div> */}
               <div className="w-full md:w-auto">
-                <a
+                {
+                  user ? 
+                  <a
                   href={`https://wa.me/send?text=I'm interested in buying ${token.name} (${token.symbol}).`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full md:w-auto inline-flex items-center justify-center bg-[#FF900D] text-white px-6 py-3 rounded-full font-semibold hover:bg-green-500 transition duration-300"
-                >
+                  >
                   <FaWhatsapp className="mr-2" /> Buy/Sell {token.symbol} Now
-                </a>
+                </a> : <Link to="/signin" className="w-full md:w-auto inline-flex items-center justify-center bg-[#FF900D] text-white px-6 py-3 rounded-full font-semibold hover:bg-green-500 transition duration-300">SignUp To Buy</Link> 
+                }
               </div>
             </div>
           </div>

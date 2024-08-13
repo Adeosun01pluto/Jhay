@@ -1,7 +1,7 @@
 import React from 'react'
-import Hero from '../components/Hero'
-import HelpSupport from '../components/HelpSupport'
-import TestimonialSection from '../components/TestimonialSection'
+import Hero from '../../components/Hero'
+import HelpSupport from '../../components/HelpSupport'
+import TestimonialSection from '../../components/TestimonialSection'
 
 function Home() {
   return (

@@ -1,12 +1,89 @@
 import React, { useState } from 'react';
 import { Tab } from '@headlessui/react';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
+import { auth, db, googleProvider } from '../../firebase/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 function classNames(...classes) {
-  return classes.filter(Boolean).join(' ')
+  return classes.filter(Boolean).join(' ');
 }
 
 const AuthPage = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const navigate = useNavigate();
+  const signUp = async () => {
+    setErrorMessage(''); // Reset error message
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Add user details to Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        email: user.email,
+        bio:  "",
+        name:  "",
+        photoUrl: "",
+        phoneNumber : "",
+        isAdmin: false,
+      });
+  
+      console.log('User signed up:', email);
+      setSelectedIndex(1); // Switch to the login tab after signing up
+    } catch (error) {
+      console.log('Error signing up:', error.message);
+      setErrorMessage(error.message);
+    }
+  };
+  
+  const signInWithEmail = async () => {
+    setErrorMessage(''); // Reset error message
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+  
+      // Optionally, you can check if the user exists in Firestore and handle accordingly
+  
+      console.log('User signed in:', email);
+      navigate('/tokens'); // Redirect to tokens route after signing in
+    } catch (error) {
+      console.error('Error signing in:', error.message);
+      setErrorMessage(error.message);
+    }
+  };
+  
+  const signInWithGoogle = async () => {
+    setErrorMessage(''); // Reset error message
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      console.log(user)
+
+      // Check if user exists in Firestore, if not, add them
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+  
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, {
+          email: user.email,
+          bio:  "",
+          name:  user.displayName,
+          photoUrl:  user.photoURL,
+          phoneNumber : "", 
+          isAdmin: false,
+        });
+      }
+  
+      console.log('Signed in with Google');
+      navigate('/tokens'); // Redirect to tokens route after signing in
+    } catch (error) {
+      console.error('Error signing in with Google:', error.message);
+      setErrorMessage(error.message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-0 sm:px-6 lg:px-8">
@@ -49,7 +126,7 @@ const AuthPage = () => {
             </Tab.List>
             <Tab.Panels className="mt-2">
               <Tab.Panel>
-                <form className="space-y-6" action="#" method="POST">
+                <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                       Email address
@@ -60,6 +137,7 @@ const AuthPage = () => {
                         name="email"
                         type="email"
                         autoComplete="email"
+                        onChange={(e) => setEmail(e.target.value)}
                         required
                         className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm"
                       />
@@ -76,24 +154,41 @@ const AuthPage = () => {
                         name="password"
                         type="password"
                         autoComplete="current-password"
+                        onChange={(e) => setPassword(e.target.value)}
                         required
                         className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm"
                       />
                     </div>
                   </div>
 
+                  {errorMessage && (
+                    <div className="text-red-500 text-sm">
+                      {errorMessage}
+                    </div>
+                  )}
+
                   <div>
                     <button
-                      type="submit"
+                      type="button"
+                      onClick={signUp}
                       className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#FF900D] hover:bg-[#e68200] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF900D]"
                     >
                       Sign up
                     </button>
                   </div>
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      onClick={signInWithGoogle}
+                      className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400"
+                    >
+                      Sign up with Google
+                    </button>
+                  </div>
                 </form>
               </Tab.Panel>
               <Tab.Panel>
-                <form className="space-y-6" action="#" method="POST">
+                <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                       Email address
@@ -104,6 +199,7 @@ const AuthPage = () => {
                         name="email"
                         type="email"
                         autoComplete="email"
+                        onChange={(e) => setEmail(e.target.value)}
                         required
                         className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm"
                       />
@@ -120,11 +216,18 @@ const AuthPage = () => {
                         name="password"
                         type="password"
                         autoComplete="current-password"
+                        onChange={(e) => setPassword(e.target.value)}
                         required
                         className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm"
                       />
                     </div>
                   </div>
+
+                  {errorMessage && (
+                    <div className="text-red-500 text-sm">
+                      {errorMessage}
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -148,10 +251,20 @@ const AuthPage = () => {
 
                   <div>
                     <button
-                      type="submit"
+                      type="button"
+                      onClick={signInWithEmail}
                       className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#FF900D] hover:bg-[#e68200] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF900D]"
                     >
                       Sign in
+                    </button>
+                  </div>
+                  <div className="mt-4">
+                    <button
+                      type="button"
+                      onClick={signInWithGoogle}
+                      className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-400"
+                    >
+                      Sign in with Google
                     </button>
                   </div>
                 </form>
