@@ -4,6 +4,7 @@ import { FaTimes, FaHome, FaFileAlt, FaBell, FaUsers, FaSignOutAlt } from 'react
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase/firebase'; // Adjust the import path as needed
 import useAuth from '../hooks/useAuth';
+import { ThreeDots } from 'react-loader-spinner';
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const navigate = useNavigate();
@@ -17,15 +18,25 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       console.error('Error signing out: ', error);
     }
   };
-
+  if (loading) return <div className="text-center w-[100%] flex items-center justify-center">
+  <ThreeDots
+    visible={true}
+    height="100"
+    width="100"
+    color="#FF900D"
+    ariaLabel="three-circles-loading"
+    wrapperStyle={{}}
+    wrapperClass=""
+    />
+  </div>;
   return (
     <div
-      className={`fixed z-20 inset-y-0 left-0 w-64 bg-white text-[#FF900D] dark:bg-gray-800 dark:text-gray-300 transition duration-300 transform ${
+      className={`fixed inset-y-0 left-0 w-64 bg-white text-[#FF900D] dark:bg-gray-800 dark:text-gray-300 transition duration-300 transform ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0 lg:static lg:inset-0`}
     >
       <div className="flex items-center justify-between p-6">
-        <h2 className="text-lg md:text-2xl font-bold">Admin Panel</h2>
+        <h2 className="text-lg md:text-2xl font-bold">{isAdmin ? "Admin Panel" : "Panel" }</h2>
         <button onClick={toggleSidebar} className="lg:hidden">
           <FaTimes size={24} className="text-gray-500 dark:text-gray-400" />
         </button>

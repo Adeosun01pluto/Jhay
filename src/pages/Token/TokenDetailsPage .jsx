@@ -30,7 +30,6 @@ const TokenDetailsPage = () => {
   const [userAccountNumber, setUserAccountNumber] = useState("");
   const [userAccountNameAndBank, setUserAccountNameAndBank] = useState("");
   const navigate = useNavigate(); // Define navigate function
-  console.log(user)
   useEffect(() => {
     fetchTokenDetails();
     fetchPriceListData();
@@ -130,8 +129,39 @@ const TokenDetailsPage = () => {
 
     return result;
   };
-
+  const [confirmOrderLoading, setConfirmOrderLoading] = useState(false);
   const confirmOrder = async () => {
+    // Prevent multiple submissions
+    if (confirmOrderLoading) return;
+    // Start loading
+    setConfirmOrderLoading(true);
+
+    // Validation for Buy action
+    if (action === 'buy') {
+      if (!tokenAmount || !amount || !userWalletAddress || !userNetwork) {
+        alert('Please provide token amount, amount, wallet address, and network.');
+        setConfirmOrderLoading(false); // Stop loading on error
+        return;
+      }
+    }
+
+    // Validation for Sell action
+    if (action === 'sell') {
+      if (currency === 'usd') {
+        if (!tokenAmount || !amount || !userWalletAddress || !userNetwork) {
+          alert('Please provide token amount, amount, wallet address, and network for selling in USD.');
+          setConfirmOrderLoading(false); // Stop loading on error
+          return;
+        }
+      } else {
+        if (!tokenAmount || !amount || !userAccountNumber || !userAccountNameAndBank) {
+          alert('Please provide token amount, amount, account number, and account name and bank for selling.');
+          setConfirmOrderLoading(false); // Stop loading on error
+          return;
+        }
+      }
+    }
+
     const uniqueCode = generateUniqueCode();
     const orderData = {
       userId: user.uid,
@@ -168,6 +198,9 @@ const TokenDetailsPage = () => {
     } catch (error) {
       console.error('Error adding order: ', error);
       setError('Failed to place order. Please try again.');
+    } finally {
+      // Stop loading after the request is complete
+      setConfirmOrderLoading(false);
     }
   };
 
@@ -452,19 +485,67 @@ const TokenDetailsPage = () => {
                       readOnly
                     />
                   </div>
+                  {currency === 'usd' ? (
+                    <>
+                      <div>
+                        <label className="font-semibold text-gray-900 dark:text-white">User USD Wallet Address</label>
+                        <input
+                          required
+                          type="text"
+                          value={userWalletAddress}
+                          onChange={(e)=>setUserWalletAddress(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-semibold text-gray-900 dark:text-white">Network</label>
+                        <input
+                          required
+                          type="text"
+                          value={userNetwork}
+                          onChange={(e)=>setUserNetwork(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="font-semibold text-gray-900 dark:text-white">User Account Number</label>
+                        <input
+                          required
+                          type="text"
+                          value={userAccountNumber}
+                          onChange={(e)=>setUserAccountNumber(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-semibold text-gray-900 dark:text-white">User Account Name & Bank</label>
+                        <input
+                          required
+                          type="text"
+                          value={userAccountNameAndBank}
+                          onChange={(e)=>setUserAccountNameAndBank(e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        />
+                      </div>
+                    </>
+                  )}
                 </>
               )}
   
               <button
-                type="submit"
-                className="w-full px-4 py-2 bg-[#FF900D] dark:bg-[#FF900D] text-white font-semibold rounded-md shadow-sm hover:bg-[#FF900D]/70 dark:hover:bg-[#FF900D]/80 focus:outline-none focus:ring-2 focus:ring-[#FF900D]/50 dark:focus:ring-[#FF900D]/60"
-              >
-                Place Order
-              </button>
+              type="submit"
+              className={`w-full px-4 py-2 ${priceListData ? 'bg-[#FF900D] dark:bg-[#FF900D] hover:bg-[#FF900D]/70 dark:hover:bg-[#FF900D]/80' : 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed'} text-white font-semibold rounded-md shadow-sm focus:outline-none focus:ring-2 ${priceListData ? 'focus:ring-[#FF900D]/50 dark:focus:ring-[#FF900D]/60' : 'focus:ring-gray-500 dark:focus:ring-gray-700'}`}
+              disabled={!priceListData}
+            >
+              {priceListData ? 'Place Order' : "Can't Place Order Yet"}
+            </button>
             </form>
           </div>
            {showConfirmation && (
-            <div className="p-4 border-t border-gray-200">
+            <div className="p-4 border-t dark:text-white border-gray-200">
               <h2 className="text-lg font-semibold mb-2">Order Summary</h2>
 
               {action === 'buy' ? (
@@ -473,7 +554,7 @@ const TokenDetailsPage = () => {
                     <strong>Operation:</strong> Buy {token.symbol}
                   </p>
                   <p className="mb-2">
-                    <strong>Amount to Pay:</strong> {amount} {currency}
+                    <strong>Amount to Pay: </strong> {currency === "usd" ? "$" : String.fromCharCode(8358)}{Number(amount).toLocaleString()} {currency} only
                   </p>
                   <p className="mb-2">
                     <strong>Rate:</strong> {priceListData?.buyRate} {currency} per USD
@@ -502,6 +583,9 @@ const TokenDetailsPage = () => {
                   )}
                   <p className="mb-2">
                     <strong>Your Wallet Address:</strong> {userWalletAddress}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Your Network:</strong> {userNetwork}
                   </p>
                   <p className="text-sm text-gray-500">You will receive {tokenAmount} {token.symbol} for your purchase.</p>
                 </>
@@ -537,18 +621,44 @@ const TokenDetailsPage = () => {
                       <p className="mb-2">
                         <strong>Your Wallet Address:</strong> {userWalletAddress}
                       </p>
+                      <p className="mb-2">
+                        <strong>Your Network:</strong> {userNetwork}
+                      </p>
                     </> 
                   }
-                  <p className="text-sm text-gray-500">You will receive {total} {currency} for selling {tokenAmount} {token.symbol}.</p>
+                  <p className="text-sm text-gray-500">You will receive {currency === "usd" ? "$" : String.fromCharCode(8358)}{total} {currency} for selling {tokenAmount} {token.symbol}.</p>
                 </>
               )}
               {user?.uid ? (
                 <div className="flex gap-4 mt-4">
                   <button
-                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 flex items-center justify-center"
                     onClick={confirmOrder}
+                    disabled={confirmOrderLoading}
                   >
-                    Continue
+                    {confirmOrderLoading && (
+                      <svg
+                        className="animate-spin h-5 w-5 mr-2 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        ></path>
+                      </svg>
+                    )}
+                    {confirmOrderLoading ? 'Processing...' : 'Continue'}
                   </button>
                   <button
                     className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"

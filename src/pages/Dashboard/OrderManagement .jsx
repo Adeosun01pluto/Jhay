@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, updateDoc, doc, getDoc, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/firebase'; // Adjust the import path as needed
 import useAuth from '../../hooks/useAuth';
+import { ThreeDots } from 'react-loader-spinner';
+import { FaSpinner } from 'react-icons/fa';
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
@@ -9,8 +11,11 @@ const OrderManagement = () => {
   const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [userDetails, setUserDetails] = useState(null); // Store user details
-  const { user, isAdmin } = useAuth();
-
+  const { user, isAdmin, loading:mainLoading } = useAuth();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState(''); // For filtering by status
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  // Fetch Orders
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -28,7 +33,9 @@ const OrderManagement = () => {
         }
 
         const ordersSnapshot = await getDocs(ordersQuery);
-        setOrders(ordersSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+        const fetchedOrders = ordersSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        setOrders(fetchedOrders);
+        setFilteredOrders(fetchedOrders);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching orders:', err);
@@ -41,6 +48,22 @@ const OrderManagement = () => {
       fetchOrders();
     }
   }, [user, isAdmin]);
+
+   // Filter orders based on search term and status
+   useEffect(() => {
+    const filtered = orders.filter(order => {
+      const matchesSearchTerm = order.orderCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.token.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.token.symbol.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesStatus = statusFilter ? order.status === statusFilter : true;
+
+      return matchesSearchTerm && matchesStatus;
+    });
+
+    setFilteredOrders(filtered);
+  }, [searchTerm, statusFilter, orders]);
+
 
   const handleViewOrder = async (order) => {
     setSelectedOrder(order);
@@ -55,8 +78,11 @@ const OrderManagement = () => {
       console.error('Error fetching user details: ', error);
     }
   };
+  const [confirmOrderLoading, setConfirmOrderLoading] = useState(false);
+  const [notifyUserLoading, setNotifyUserLoading] = useState(false);
 
   const handleConfirmPayment = async (orderId) => {
+    setConfirmOrderLoading(true);
     try {
       await updateDoc(doc(db, 'orders', orderId), {
         status: 'paid',
@@ -67,10 +93,13 @@ const OrderManagement = () => {
     } catch (error) {
       console.error('Error confirming payment: ', error);
       alert('Failed to confirm payment.');
+    } finally {
+      setConfirmOrderLoading(false);
     }
   };
 
   const handleNotifyUser = async (orderId) => {
+    setNotifyUserLoading(true);
     try {
       await updateDoc(doc(db, 'orders', orderId), {
         status: 'payment_not_received',
@@ -81,6 +110,8 @@ const OrderManagement = () => {
     } catch (error) {
       console.error('Error notifying user: ', error);
       alert('Failed to notify the user.');
+    } finally {
+      setNotifyUserLoading(false);
     }
   };
 
@@ -111,19 +142,52 @@ const OrderManagement = () => {
     }
   };
 
-  if (loading) {
-    return <p className="text-gray-900 dark:text-gray-100">Loading orders...</p>;
-  }
+
+
+  if (loading) return <div className="text-center w-[100%] flex items-center justify-center">
+  <ThreeDots
+    visible={true}
+    height="100"
+    width="100"
+    color="#FF900D"
+    ariaLabel="three-circles-loading"
+    wrapperStyle={{}}
+    wrapperClass=""
+    />
+  </div>;
 
   if (error) {
     return <p className="text-red-600 dark:text-red-400">{error}</p>;
   }
+  console.log(selectedOrder)
 
   return (
     <div className="bg-white dark:bg-gray-800 shadow md:rounded-lg p-4">
       <h2 className="text-lg md:text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Manage Orders</h2>
+      <div className="mb-4 flex flex-col sm:flex-row w-full justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
+        {/* Search Bar */}
+        <input
+          type="text"
+          className="border border-gray-300 rounded-md p-2 w-full sm:w-7/12"
+          placeholder="Search by order code, token, or user"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+
+        {/* Status Filter */}
+        <select
+          className="border border-gray-300 rounded-md p-2 w-full sm:w-5/12"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="payment_not_received">Payment Not Received</option>
+          <option value="paid">Paid</option>
+        </select>
+      </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {orders.map((order) => (
+        {filteredOrders.map((order) => (
           <div
             key={order.id}
             className={`${
@@ -142,7 +206,7 @@ const OrderManagement = () => {
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Token: {order.token.name}</p>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Token Amount to be {order.action === "buy" ? "Bought" : "Sold"}: {order.tokenAmount}</p>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Operation: {order.action.toUpperCase()}</p>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Amount in {order.currency}: {order.currency === "usd" ? "$" : "#"}{Number(order.amount).toLocaleString()}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Amount in {order.currency}: {order.currency === "usd" ? "$" : String.fromCharCode(8358) }{Number(order.amount).toLocaleString()} Only</p>
             <p className="text-sm font-medium mb-2">
               Status: <span className={
                 order.status === 'paid' ? "text-green-600 dark:text-green-400" :
@@ -170,17 +234,47 @@ const OrderManagement = () => {
           <div className="relative mx-auto p-2 md:p-5 border w-full max-w-md sm:max-w-lg lg:max-w-xl shadow-lg rounded-md bg-white dark:bg-gray-800">
             <div className="mt-1 md:mt-3">
               <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Order Details</h3>
+              {/* Show the poke icon if the admin has been poked */}
+              {isAdmin && selectedOrder.poke && (
+                <div className="text-red-600 dark:text-red-400 flex justify-end mb-2">
+                  Poked
+                </div>
+              )}
               <div className="mt-1 md:mt-2 px-2 md:px-4 py-3">
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 break-all">
                   Order ID: {selectedOrder.orderCode}
                 </p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">Operation: {selectedOrder.action.toUpperCase()}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 break-words">
                   User: {selectedOrder?.userId}
                 </p>
+                { selectedOrder?.adminWalletAddress &&
+                  <>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 break-words">
+                      Admin Wallet Address: {selectedOrder?.adminWalletAddress}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 break-words">
+                      Admin Network: {selectedOrder?.adminNetwork}
+                    </p>
+                  </>
+                }
+                { selectedOrder?.adminAccountNumber &&
+                  <>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 break-words">
+                      Admin Account Number: {selectedOrder?.adminAccountNumber}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 break-words">
+                      Admin Account Name and Bank: {selectedOrder?.adminAccountNameandBank}
+                    </p>
+                  </>
+                }
                 {userDetails && (
                   <>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                      User Name: {userDetails.name}
+                      User Name: {userDetails.username}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                       Phone Number: {userDetails.phoneNumber}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
                       User Email: {userDetails.email}
@@ -191,27 +285,52 @@ const OrderManagement = () => {
                   Token: {selectedOrder.token.name}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                  Amount in {selectedOrder.currency}: {Number(selectedOrder.amount).toLocaleString()}
+                  Token Amount : {selectedOrder.tokenAmount}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                  Amount in {selectedOrder.currency}: {selectedOrder.currency === "usd" ? "$" : String.fromCharCode(8358)}{Number(selectedOrder.amount).toLocaleString()}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
                   Status: {selectedOrder.status}
                 </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 break-words">
-                  User Account/Wallet: {selectedOrder.userWalletAddress}
-                </p>
+                {selectedOrder.userWalletAddress && (
+                  <>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 break-words">
+                    User Wallet: {selectedOrder.userWalletAddress}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 break-words">
+                    User Wallet Network: {selectedOrder.userNetwork}
+                  </p>
+                  </>
+                )}
+                {selectedOrder.userAccountNumber && (
+                  <>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 break-words">
+                      User Account Number : {selectedOrder.userAccountNumber}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 break-words">
+                      User Account Number : {selectedOrder.userAccountNameAndBank}
+                    </p>
+                  </>
+                )}
                 <div className="mt-4 flex flex-col sm:flex-row sm:justify-between gap-2">
                   {isAdmin ? (
                     <>
                       <button
                         onClick={() => handleConfirmPayment(selectedOrder.id)}
-                        className="bg-green-500 dark:bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-600 dark:hover:bg-green-500 w-full sm:w-auto"
+                        className="bg-green-500 dark:bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-600 dark:hover:bg-green-500 w-full sm:w-auto flex items-center justify-center"
+                        disabled={confirmOrderLoading}
                       >
+                        {confirmOrderLoading && <FaSpinner className="animate-spin mr-2" />}
                         Confirm Payment
                       </button>
+                      
                       <button
                         onClick={() => handleNotifyUser(selectedOrder.id)}
-                        className="bg-red-500 dark:bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-600 dark:hover:bg-red-500 w-full sm:w-auto"
+                        className="bg-red-500 dark:bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-600 dark:hover:bg-red-500 w-full sm:w-auto flex items-center justify-center mt-2 sm:mt-0 sm:ml-2"
+                        disabled={notifyUserLoading}
                       >
+                        {notifyUserLoading && <FaSpinner className="animate-spin mr-2" />}
                         Notify User
                       </button>
                     </>

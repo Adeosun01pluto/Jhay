@@ -17,6 +17,9 @@ import useAuth from './hooks/useAuth';
 import BlogPost from './pages/Blogs/BlogPost';
 import { ThreeCircles } from 'react-loader-spinner';
 
+// &#8358 naira 
+
+
 const App = () => {
   const { user, isAdmin, loading } = useAuth();
 

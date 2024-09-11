@@ -14,6 +14,9 @@ const AuthPage = () => {
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [username, setUsername] = useState('');
+
   const navigate = useNavigate();
 
   const signUp = async () => {
@@ -24,10 +27,11 @@ const AuthPage = () => {
 
       await setDoc(doc(db, 'users', user.uid), {
         email: user.email,
+        username: username,
+        phoneNumber: phoneNumber,
         bio: "",
         name: "",
         photoUrl: "",
-        phoneNumber: "",
         isAdmin: false,
       });
 
@@ -46,7 +50,7 @@ const AuthPage = () => {
       const user = userCredential.user;
 
       console.log('User signed in:', email);
-      navigate('/tokens'); // Redirect to tokens route after signing in
+      navigate('/'); // Redirect to tokens route after signing in
     } catch (error) {
       console.error('Error signing in:', error.message);
       setErrorMessage(error.message);
@@ -75,7 +79,7 @@ const AuthPage = () => {
       }
 
       console.log('Signed in with Google');
-      navigate('/tokens'); // Redirect to tokens route after signing in
+      navigate('/'); // Redirect to tokens route after signing in
     } catch (error) {
       console.error('Error signing in with Google:', error.message);
       setErrorMessage(error.message);
@@ -123,7 +127,7 @@ const AuthPage = () => {
             </Tab.List>
             <Tab.Panels className="mt-2">
               <Tab.Panel>
-                <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Email address
@@ -140,7 +144,39 @@ const AuthPage = () => {
                       />
                     </div>
                   </div>
+                  <div>
+                    <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Username
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        id="username"
+                        name="username"
+                        type="text"
+                        autoComplete="username"
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
+                        className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                    </div>
+                  </div>
 
+                  <div>
+                    <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Phone Number
+                    </label>
+                    <div className="mt-1">
+                      <input
+                        id="phoneNumber"
+                        name="phoneNumber"
+                        type="tel"
+                        autoComplete="tel"
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        required
+                        className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                    </div>
+                  </div>
                   <div>
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Password

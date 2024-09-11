@@ -2,16 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs, setDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase/firebase'; // Adjust the import path as needed
 import axios from 'axios'; // For fetching token prices and names
+import { FaSpinner } from 'react-icons/fa';
+import { ThreeDots } from 'react-loader-spinner';
 
 const PriceListManagement = () => {
   const [tokens, setTokens] = useState([]);
   const [editingToken, setEditingToken] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const rapidApiKey = import.meta.env.VITE_RAPID_API_KEY;
-
+  const [priceListLoading, setPriceListLoading] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
   // Fetch tokens from Firebase and API
   useEffect(() => {
     const fetchTokensFromApiAndDb = async () => {
+      setPriceListLoading(true)
       try {
         // Fetch token prices and names from API
         const options = {
@@ -52,6 +56,8 @@ const PriceListManagement = () => {
         setTokens(mergedTokens);
       } catch (error) {
         console.error('Error fetching token data:', error);
+      }finally {
+        setPriceListLoading(false);
       }
     };
 
@@ -71,6 +77,7 @@ const PriceListManagement = () => {
   };
 
   const handleUpdateToken = async (token) => {
+    setSaveLoading(true);
     try {
       await setDoc(doc(db, 'pricelist', editingToken.id), {
         tokenId: token.id,
@@ -89,6 +96,8 @@ const PriceListManagement = () => {
       alert('Token updated successfully.');
     } catch (error) {
       console.error('Error updating token:', error);
+    }finally {
+      setSaveLoading(false);
     }
   };
 
@@ -100,7 +109,17 @@ const PriceListManagement = () => {
     token.accountNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
     token.accountNameAndBank.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
+  if (priceListLoading) return <div className="text-center w-[100%] flex items-center justify-center">
+  <ThreeDots
+    visible={true}
+    height="100"
+    width="100"
+    color="#FF900D"
+    ariaLabel="three-circles-loading"
+    wrapperStyle={{}}
+    wrapperClass=""
+    />
+  </div>;
   return (
     <div className="bg-white dark:bg-gray-900 shadow rounded-lg p-4">
       <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Manage Token Prices</h2>
@@ -129,7 +148,7 @@ const PriceListManagement = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider dark:text-gray-400">Actions</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+          <tbody className="bg-white divide-y divide-gray-200 text-black dark:text-white dark:bg-gray-800 dark:divide-gray-700">
             {filteredTokens.map((token) => (
               <tr key={token.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-gray-800 dark:text-gray-100">{token.name}</td>
@@ -210,14 +229,16 @@ const PriceListManagement = () => {
                   {editingToken && editingToken.id === token.id ? (
                     <button
                       onClick={() => handleUpdateToken(token)}
-                      className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm mr-2 dark:bg-green-900 dark:text-green-300"
+                      className="flex items-center justify-center bg-green-100 text-green-800 px-2 py-1 rounded text-sm mr-2 dark:bg-green-900 dark:text-green-300"
+                      disabled={saveLoading}
                     >
+                      {saveLoading && <FaSpinner className="animate-spin mr-2" />}
                       Save
                     </button>
                   ) : (
                     <button
                       onClick={() => handleEditToken(token)}
-                      className="bg--100 text-[#FF900D]/80 px-2 py-1 rounded text-sm dark:bg-[#FF900D]/90 dark:text-[#FF900D]/30"
+                      className="text-[#000]/80  px-2 py-1 rounded text-sm bg-[#FF900D]/90 dark:bg-[#FF900D]/90 dark:text-[#fff]"
                     >
                       Edit
                     </button>

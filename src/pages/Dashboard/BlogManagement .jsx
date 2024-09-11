@@ -2,16 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../../firebase/firebase'; // Adjust the import path as needed
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { ThreeDots } from 'react-loader-spinner';
 
 const BlogManagement = () => {
   const [user] = useAuthState(auth);
   const [blogPost, setBlogPost] = useState({ title: '', content: '' });
   const [blogs, setBlogs] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchBlogs = async () => {
-      const blogsSnapshot = await getDocs(collection(db, 'blogs'));
-      setBlogs(blogsSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+      setLoading(true)
+      try {
+        const blogsSnapshot = await getDocs(collection(db, 'blogs'));
+        setBlogs(blogsSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })));
+      } catch (error) {
+        console.log(error)
+      } finally{
+        setLoading(false)
+      }
     };
     fetchBlogs();
   }, []);
@@ -41,6 +50,17 @@ const BlogManagement = () => {
       console.error('Error deleting blog post: ', error);
     }
   };
+  if (loading) return <div className="text-center w-[100%] flex items-center justify-center">
+    <ThreeDots
+      visible={true}
+      height="100"
+      width="100"
+      color="#FF900D"
+      ariaLabel="three-circles-loading"
+      wrapperStyle={{}}
+      wrapperClass=""
+      />
+  </div>;
 
   return (
     <div className="bg-white dark:bg-gray-900 shadow rounded-lg p-4">
