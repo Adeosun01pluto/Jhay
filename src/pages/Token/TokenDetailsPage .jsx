@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
@@ -29,7 +29,8 @@ const TokenDetailsPage = () => {
   const [userNetwork, setUserNetwork] = useState("");
   const [userAccountNumber, setUserAccountNumber] = useState("");
   const [userAccountNameAndBank, setUserAccountNameAndBank] = useState("");
-
+  const navigate = useNavigate(); // Define navigate function
+  console.log(user)
   useEffect(() => {
     fetchTokenDetails();
     fetchPriceListData();
@@ -222,7 +223,9 @@ const TokenDetailsPage = () => {
 
   const priceChange = parseFloat(token.change);
   const priceDirection = priceChange >= 0 ? 'up' : 'down';
-
+  const handleSignIn = () => {
+    navigate('/signin'); // Navigate to /signin when button is clicked
+  };
 
   // ... (previous code remains the same)
 
@@ -265,9 +268,9 @@ const TokenDetailsPage = () => {
               </div>
             </div>
           </div>
-          <div className="md:p-6">
+          {/* <div className="md:p-6">
                     <CurrencyConverter initialCoin={token} />
-                </div>
+                </div> */}
   
           {/* New Form Section */}
           <div className="mt-8 p-6 bg-gray-50 dark:bg-gray-700">
@@ -328,6 +331,7 @@ const TokenDetailsPage = () => {
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                       placeholder={`Enter amount in ${token.symbol}`}
                       required
+                      disabled
                     />
                   </div>
   
@@ -459,6 +463,110 @@ const TokenDetailsPage = () => {
               </button>
             </form>
           </div>
+           {showConfirmation && (
+            <div className="p-4 border-t border-gray-200">
+              <h2 className="text-lg font-semibold mb-2">Order Summary</h2>
+
+              {action === 'buy' ? (
+                <>
+                  <p className="mb-2">
+                    <strong>Operation:</strong> Buy {token.symbol}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Amount to Pay:</strong> {amount} {currency}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Rate:</strong> {priceListData?.buyRate} {currency} per USD
+                  </p>
+                  <p className="mb-2">
+                    <strong>Token Amount:</strong> {tokenAmount} {token.symbol}
+                  </p>
+                  {currency === 'usd' ? (
+                    <>
+                      <p className="mb-2">
+                        <strong>Admin Wallet Address:</strong> {priceListData?.walletAddress}
+                      </p>
+                      <p className="mb-2">
+                        <strong>Network:</strong> {priceListData?.network}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="mb-2">
+                        <strong>Admin Account Number:</strong> {priceListData?.accountNumber}
+                      </p>
+                      <p className="mb-2">
+                        <strong>Admin Account Name & Bank:</strong> {priceListData?.accountNameAndBank}
+                      </p>
+                    </>
+                  )}
+                  <p className="mb-2">
+                    <strong>Your Wallet Address:</strong> {userWalletAddress}
+                  </p>
+                  <p className="text-sm text-gray-500">You will receive {tokenAmount} {token.symbol} for your purchase.</p>
+                </>
+              ) : (
+                <>
+                  <p className="mb-2">
+                    <strong>Operation:</strong> Sell {token.symbol}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Token Amount:</strong> {tokenAmount} {token.symbol}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Rate:</strong> {priceListData?.sellRate} {currency} per {token.symbol}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Admin Wallet Address:</strong> {priceListData?.walletAddress}
+                  </p>
+                  <p className="mb-2">
+                    <strong>Network:</strong> {priceListData?.network}
+                  </p>
+                  {
+                    currency !== 'usd' ? 
+                    <>
+                      <p className="mb-2">
+                        <strong>Your Account Number:</strong> {userAccountNumber}
+                      </p>
+                      <p className="mb-2">
+                        <strong>Your Account Name & Bank:</strong> {userAccountNameAndBank}
+                      </p>
+                    </>
+                    :
+                    <>
+                      <p className="mb-2">
+                        <strong>Your Wallet Address:</strong> {userWalletAddress}
+                      </p>
+                    </> 
+                  }
+                  <p className="text-sm text-gray-500">You will receive {total} {currency} for selling {tokenAmount} {token.symbol}.</p>
+                </>
+              )}
+              {user?.uid ? (
+                <div className="flex gap-4 mt-4">
+                  <button
+                    className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                    onClick={confirmOrder}
+                  >
+                    Continue
+                  </button>
+                  <button
+                    className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                    onClick={() => setShowConfirmation(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="text-white px-4 py-2 rounded-md bg-red-500"
+                  onClick={handleSignIn} // Call handleSignIn function
+                >
+                  Sign in to proceed
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
