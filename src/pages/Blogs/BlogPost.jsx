@@ -34,7 +34,7 @@ const BlogPost = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 dark:bg-gray-800">
         <ThreeDots
           visible={true}
           height="80"
@@ -50,21 +50,28 @@ const BlogPost = () => {
   }
 
   if (!post) {
-    return <div className="min-h-screen flex items-center justify-center">Post not found</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 dark:bg-gray-800">
+        <p className="text-white">Post not found</p>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
-        <button onClick={() => navigate(-1)} className="text-[#FF900D] hover:text-[#FF900D]/90 mb-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-[#FF900D] hover:text-[#FF900D]/90 mb-4 dark:text-[#FF900D] dark:hover:text-[#FF900D]/90"
+        >
           &larr; Back to Blog
         </button>
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-4xl font-bold mb-4">{post.title}</h1>
-          <p className="text-gray-600 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">{post.title}</h1>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">
             By {post.author} on {new Date(post.createdAt.toDate()).toLocaleDateString()}
           </p>
-          <p className="text-gray-700">{post.content}</p>
+          <p className="text-gray-700 dark:text-gray-400">{post.content}</p>
         </div>
       </div>
     </div>

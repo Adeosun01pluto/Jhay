@@ -15,22 +15,22 @@ const AuthPage = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
+
   const signUp = async () => {
-    setErrorMessage(''); // Reset error message
+    setErrorMessage('');
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      
-      // Add user details to Firestore
+
       await setDoc(doc(db, 'users', user.uid), {
         email: user.email,
-        bio:  "",
-        name:  "",
+        bio: "",
+        name: "",
         photoUrl: "",
-        phoneNumber : "",
+        phoneNumber: "",
         isAdmin: false,
       });
-  
+
       console.log('User signed up:', email);
       setSelectedIndex(1); // Switch to the login tab after signing up
     } catch (error) {
@@ -38,15 +38,13 @@ const AuthPage = () => {
       setErrorMessage(error.message);
     }
   };
-  
+
   const signInWithEmail = async () => {
-    setErrorMessage(''); // Reset error message
+    setErrorMessage('');
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-  
-      // Optionally, you can check if the user exists in Firestore and handle accordingly
-  
+
       console.log('User signed in:', email);
       navigate('/tokens'); // Redirect to tokens route after signing in
     } catch (error) {
@@ -54,29 +52,28 @@ const AuthPage = () => {
       setErrorMessage(error.message);
     }
   };
-  
+
   const signInWithGoogle = async () => {
-    setErrorMessage(''); // Reset error message
+    setErrorMessage('');
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       console.log(user)
 
-      // Check if user exists in Firestore, if not, add them
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
-  
+
       if (!userDoc.exists()) {
         await setDoc(userDocRef, {
           email: user.email,
-          bio:  "",
-          name:  user.displayName,
-          photoUrl:  user.photoURL,
-          phoneNumber : "", 
+          bio: "",
+          name: user.displayName,
+          photoUrl: user.photoURL,
+          phoneNumber: "",
           isAdmin: false,
         });
       }
-  
+
       console.log('Signed in with Google');
       navigate('/tokens'); // Redirect to tokens route after signing in
     } catch (error) {
@@ -86,25 +83,25 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-0 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col justify-center py-0 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-100">
           Welcome to P2P Exchange
         </h2>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <Tab.Group selectedIndex={selectedIndex} onChange={setSelectedIndex}>
-            <Tab.List className="flex p-1 space-x-1 bg-gray-200 rounded-xl">
+            <Tab.List className="flex p-1 space-x-1 bg-gray-200 dark:bg-gray-700 rounded-xl">
               <Tab
                 className={({ selected }) =>
                   classNames(
-                    'w-full py-2.5 text-sm leading-5 font-medium text-gray-700 rounded-lg',
-                    'focus:outline-none focus:ring-2 ring-offset-2 ring-offset-gray-200 ring-white ring-opacity-60',
+                    'w-full py-2.5 text-sm leading-5 font-medium text-gray-700 dark:text-gray-300 rounded-lg',
+                    'focus:outline-none focus:ring-2 ring-offset-2 ring-offset-gray-200 dark:ring-offset-gray-800 ring-white ring-opacity-60',
                     selected
-                      ? 'bg-white shadow'
-                      : 'text-gray-500 hover:bg-white/[0.12] hover:text-gray-700'
+                      ? 'bg-white dark:bg-gray-800 shadow'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-white/[0.12] hover:text-gray-700 dark:hover:bg-gray-600 dark:hover:text-gray-300'
                   )
                 }
               >
@@ -113,11 +110,11 @@ const AuthPage = () => {
               <Tab
                 className={({ selected }) =>
                   classNames(
-                    'w-full py-2.5 text-sm leading-5 font-medium text-gray-700 rounded-lg',
-                    'focus:outline-none focus:ring-2 ring-offset-2 ring-offset-gray-200 ring-white ring-opacity-60',
+                    'w-full py-2.5 text-sm leading-5 font-medium text-gray-700 dark:text-gray-300 rounded-lg',
+                    'focus:outline-none focus:ring-2 ring-offset-2 ring-offset-gray-200 dark:ring-offset-gray-800 ring-white ring-opacity-60',
                     selected
-                      ? 'bg-white shadow'
-                      : 'text-gray-500 hover:bg-white/[0.12] hover:text-gray-700'
+                      ? 'bg-white dark:bg-gray-800 shadow'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-white/[0.12] hover:text-gray-700 dark:hover:bg-gray-600 dark:hover:text-gray-300'
                   )
                 }
               >
@@ -128,7 +125,7 @@ const AuthPage = () => {
               <Tab.Panel>
                 <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Email address
                     </label>
                     <div className="mt-1">
@@ -139,13 +136,13 @@ const AuthPage = () => {
                         autoComplete="email"
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm"
+                        className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Password
                     </label>
                     <div className="mt-1">
@@ -156,13 +153,13 @@ const AuthPage = () => {
                         autoComplete="current-password"
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm"
+                        className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                     </div>
                   </div>
 
                   {errorMessage && (
-                    <div className="text-red-500 text-sm">
+                    <div className="text-red-500 dark:text-red-400 text-sm">
                       {errorMessage}
                     </div>
                   )}
@@ -190,7 +187,7 @@ const AuthPage = () => {
               <Tab.Panel>
                 <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Email address
                     </label>
                     <div className="mt-1">
@@ -201,13 +198,13 @@ const AuthPage = () => {
                         autoComplete="email"
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm"
+                        className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Password
                     </label>
                     <div className="mt-1">
@@ -218,13 +215,13 @@ const AuthPage = () => {
                         autoComplete="current-password"
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm"
+                        className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                     </div>
                   </div>
 
                   {errorMessage && (
-                    <div className="text-red-500 text-sm">
+                    <div className="text-red-500 dark:text-red-400 text-sm">
                       {errorMessage}
                     </div>
                   )}
@@ -235,15 +232,15 @@ const AuthPage = () => {
                         id="remember-me"
                         name="remember-me"
                         type="checkbox"
-                        className="h-4 w-4 text-[#FF900D] focus:ring-[#FF900D] border-gray-300 rounded"
+                        className="h-4 w-4 text-[#FF900D] focus:ring-[#FF900D] border-gray-300 dark:border-gray-600 rounded"
                       />
-                      <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                      <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
                         Remember me
                       </label>
                     </div>
 
                     <div className="text-sm">
-                      <a href="#" className="font-medium text-[#FF900D] hover:text-[#e68200]">
+                      <a href="#" className="font-medium text-[#FF900D] hover:text-[#e68200] dark:text-[#FF900D] dark:hover:text-[#e68200]">
                         Forgot your password?
                       </a>
                     </div>

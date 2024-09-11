@@ -6,7 +6,9 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 import { FaWhatsapp, FaArrowUp, FaArrowDown } from 'react-icons/fa';
 import CurrencyConverter from '../Converter/CurrencyConverter';
 import { ThreeDots } from 'react-loader-spinner';
-import useAuth from "../../hooks/useAuth"
+import useAuth from "../../hooks/useAuth";
+import { db } from '../../firebase/firebase';
+import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -15,12 +17,64 @@ const TokenDetailsPage = () => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user} = useAuth();
+  const { user } = useAuth();
+  const [action, setAction] = useState('buy');
+  const [amount, setAmount] = useState('');
+  const [tokenAmount, setTokenAmount] = useState('');
+  const [currency, setCurrency] = useState('naira');
+  const [total, setTotal] = useState(0);
+  const [priceListData, setPriceListData] = useState(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [userWalletAddress, setUserWalletAddress] = useState("");
+  const [userNetwork, setUserNetwork] = useState("");
+  const [userAccountNumber, setUserAccountNumber] = useState("");
+  const [userAccountNameAndBank, setUserAccountNameAndBank] = useState("");
+
   useEffect(() => {
     fetchTokenDetails();
+    fetchPriceListData();
   }, [id]);
-  const rapidApiKey = import.meta.env.VITE_RAPID_API_KEY;
 
+  useEffect(() => {
+    if (action === 'buy' && priceListData && (amount || tokenAmount)) {
+      const rate = priceListData?.buyRate;
+      const tokenPriceInUSD = Number(token?.price);
+      let convertedAmount;
+      if (currency === 'usd') {
+        convertedAmount = parseFloat(Number(amount) / tokenPriceInUSD);
+      } else if (currency === 'naira') {
+        convertedAmount = parseFloat((Number(amount) / rate) / tokenPriceInUSD);
+      }
+
+      if (amount) {
+        setTokenAmount((convertedAmount).toFixed(8));
+        setTotal((convertedAmount).toFixed(8));
+      }
+    }
+  }, [action, amount, tokenAmount, currency, priceListData]);
+
+  useEffect(() => {
+    if (action === 'sell' && priceListData && (amount || tokenAmount)) {
+      const rate = priceListData?.sellRate;
+      const tokenPriceInUSD = Number(token?.price);
+      let convertedAmount;
+      if (currency === 'usd') {
+        convertedAmount = parseFloat(tokenPriceInUSD * Number(tokenAmount));
+      } else if (currency === 'naira') {
+        convertedAmount = (parseFloat((tokenPriceInUSD * Number(tokenAmount)) * rate));
+      }
+
+      if (tokenAmount) {
+        setTotal(convertedAmount.toFixed(2));
+        setAmount((convertedAmount).toFixed(2));
+      } else if (amount) {
+        setTokenAmount((parseFloat(amount) / rate).toFixed(8));
+        setTotal(parseFloat(amount).toFixed(2));
+      }
+    }
+  }, [action, amount, tokenAmount, currency, priceListData]);
+
+  const rapidApiKey = import.meta.env.VITE_RAPID_API_KEY;
 
   const fetchTokenDetails = async () => {
     setLoading(true);
@@ -43,6 +97,87 @@ const TokenDetailsPage = () => {
       setError('Failed to fetch token details. Please try again later.');
       setLoading(false);
     }
+  };
+
+  const fetchPriceListData = async () => {
+    try {
+      const q = query(collection(db, 'pricelist'), where('tokenId', '==', id));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        setPriceListData(querySnapshot.docs[0].data());
+      }
+    } catch (error) {
+      console.error('Error fetching price list data:', error);
+    }
+  };
+
+  const handleOrderSubmit = (e) => {
+    e.preventDefault();
+    setShowConfirmation(true);
+  };
+
+  const generateUniqueCode = () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    const length = 8;
+
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      result += characters[randomIndex];
+    }
+
+    return result;
+  };
+
+  const confirmOrder = async () => {
+    const uniqueCode = generateUniqueCode();
+    const orderData = {
+      userId: user.uid,
+      token: {
+        name: token.name,
+        symbol: token.symbol,
+        id: id
+      },
+      action,
+      amount: parseFloat(amount),
+      currency,
+      tokenAmount: parseFloat(tokenAmount),
+      rate: action === 'buy' ? priceListData?.buyRate : priceListData?.sellRate,
+      total: parseFloat(total),
+      status: 'pending',
+      orderCode: uniqueCode,
+      ...(action === 'buy' ? {
+        userWalletAddress,
+        userNetwork,
+        adminAccountNumber: priceListData.accountNumber,
+        adminAccountNameandBank: priceListData.accountNameAndBank,
+      } : {
+        userAccountNumber,
+        userAccountNameAndBank,
+        adminWalletAddress: priceListData.walletAddress,
+        adminNetwork: priceListData.network
+      })
+    };
+    try {
+      const docRef = await addDoc(collection(db, 'orders'), orderData);
+      alert("Your order has been proceeded sucessfully")
+      resetForm();
+      setShowConfirmation(false);
+    } catch (error) {
+      console.error('Error adding order: ', error);
+      setError('Failed to place order. Please try again.');
+    }
+  };
+
+  const resetForm = () => {
+    setAmount('');
+    setTokenAmount('');
+    setUserWalletAddress('');
+    setUserNetwork('');
+    setUserAccountNumber('');
+    setUserAccountNameAndBank('');
+    setTotal("");
   };
 
   if (loading) return <div className="text-center w-[100%] flex items-center justify-center">
@@ -88,85 +223,247 @@ const TokenDetailsPage = () => {
   const priceChange = parseFloat(token.change);
   const priceDirection = priceChange >= 0 ? 'up' : 'down';
 
+
+  // ... (previous code remains the same)
+
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="container mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 md:py-8">
+      <div className="container mx-auto md:px-4">
+        <div className="bg-white dark:bg-gray-800 md:rounded-lg shadow-lg overflow-hidden">
+          {/* ... (previous content remains the same) */}
           <div className="p-6">
             <div className="flex items-center mb-4">
-              <img src={token.iconUrl} alt={token.name} className="w-16 h-16 mr-4" />
+              <img src={token.iconUrl} alt={token.name} className="md:w-16 md:h-16 w-12 h-12 mr-4" />
               <div>
-                <h1 className="text-3xl font-bold">{token.name} ({token.symbol})</h1>
-                <p className="text-gray-600">Rank: #{token.rank}</p>
+                <h1 className="text-lg md:text-3xl font-bold text-gray-900 dark:text-white">{token.name} ({token.symbol})</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Rank: #{token.rank}</p>
               </div>
             </div>
-            
+  
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               <div>
-                <h2 className="text-2xl font-semibold mb-2">Price Information</h2>
-                <p className="text-3xl font-bold text-[#FF900D]">${parseFloat(token.price).toFixed(2)} USD</p>
-                <p className={`text-lg ${priceDirection === 'up' ? 'text-green-500' : 'text-red-500'} flex items-center`}>
+                <h2 className="text-sm md:text-lg font-semibold mb-2 text-gray-900 dark:text-white">Price Information</h2>
+                <p className="text-2xl md:text-3xl font-bold text-[#FF900D] dark:text-[#FF900D]">${parseFloat(token.price).toFixed(2)} USD</p>
+                <p className={`text-sm md:text-lg ${priceDirection === 'up' ? 'text-green-500' : 'text-red-500'} flex items-center`}>
                   {priceDirection === 'up' ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
                   {Math.abs(priceChange)}% ({priceDirection})
                 </p>
-                <p className="text-gray-600">BTC Price: {parseFloat(token.btcPrice).toFixed(8)} BTC</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">BTC Price: {parseFloat(token.btcPrice).toFixed(8)} BTC</p>
               </div>
               <div>
-                <h2 className="text-2xl font-semibold mb-2">Market Information</h2>
-                <p className="text-gray-600">Market Cap: ${parseInt(token.marketCap).toLocaleString()}</p>
-                <p className="text-gray-600">24h Volume: ${parseInt(token['24hVolume']).toLocaleString()}</p>
-                <p className="text-gray-600">Listed: {new Date(token.listedAt * 1000).toLocaleDateString()}</p>
+                <h2 className="text-lg md:text-2xl font-semibold mb-2 text-gray-900 dark:text-white">Market Information</h2>
+                <p className="text-gray-600 dark:text-gray-400">Market Cap: ${parseInt(token.marketCap).toLocaleString()}</p>
+                <p className="text-gray-600 dark:text-gray-400">24h Volume: ${parseInt(token['24hVolume']).toLocaleString()}</p>
+                <p className="text-gray-600 dark:text-gray-400">Listed: {new Date(token.listedAt * 1000).toLocaleDateString()}</p>
               </div>
             </div>
-
-            <div className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4">Price Chart</h2>
-              <div className="h-64 md:h-96">
+  
+            <div className="mb-2 md:mb-8">
+              <h2 className="text-lg md:text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Price Chart</h2>
+              <div className="h-32 md:h-96">
                 <Line data={chartData} options={chartOptions} />
               </div>
             </div>
-
-            <div className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4">Token Overview</h2>
-              <p className="text-gray-700">{token.description}</p>
-            </div>
-
-            <div className="bg-white rounded-lg overflow-hidden mb-8">
-                <div className="p-6">
+          </div>
+          <div className="md:p-6">
                     <CurrencyConverter initialCoin={token} />
                 </div>
-            </div>
-
-            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 md:space-x-4">
-              {/* <div className="w-full md:w-auto">
-                <button className="w-full md:w-auto bg-green-500 text-white px-6 py-3 rounded-full font-semibold hover:bg-green-600 transition duration-300">
-                  Buy {token.symbol}
-                </button>
-              </div> */}
-              {/* <div className="w-full md:w-auto">
-                <button className="w-full md:w-auto bg-red-500 text-white px-6 py-3 rounded-full font-semibold hover:bg-red-600 transition duration-300">
-                  Sell {token.symbol}
-                </button>
-              </div> */}
-              <div className="w-full md:w-auto">
-                {
-                  user ? 
-                  <a
-                  href={`https://wa.me/send?text=I'm interested in buying ${token.name} (${token.symbol}).`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full md:w-auto inline-flex items-center justify-center bg-[#FF900D] text-white px-6 py-3 rounded-full font-semibold hover:bg-green-500 transition duration-300"
-                  >
-                  <FaWhatsapp className="mr-2" /> Buy/Sell {token.symbol} Now
-                </a> : <Link to="/signin" className="w-full md:w-auto inline-flex items-center justify-center bg-[#FF900D] text-white px-6 py-3 rounded-full font-semibold hover:bg-green-500 transition duration-300">SignUp To Buy</Link> 
-                }
+  
+          {/* New Form Section */}
+          <div className="mt-8 p-6 bg-gray-50 dark:bg-gray-700">
+            <h2 className="text-lg md:text-2xl font-semibold mb-4 text-gray-900 dark:text-white">Buy/Sell {token.symbol}</h2>
+            <form onSubmit={handleOrderSubmit} className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="font-semibold text-gray-900 dark:text-white">Action</label>
+                <select
+                  value={action}
+                  onChange={(e) => {
+                    setAction(e.target.value);
+                    resetForm();
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                >
+                  <option value="buy">Buy</option>
+                  <option value="sell">Sell</option>
+                </select>
               </div>
-            </div>
+  
+              <div>
+                <label className="font-semibold text-gray-900 dark:text-white">Currency {action === 'buy' ? "to make Payment" : "to receive Payment"}</label>
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                >
+                  <option value="naira">Naira</option>
+                  <option value="usd">USD</option>
+                </select>
+              </div>
+  
+              {action === 'buy' && (
+                <>
+                  <div>
+                    <label className="font-semibold text-gray-900 dark:text-white">Amount in {currency === 'token' ? token.symbol : currency}</label>
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => {
+                        setAmount(e.target.value);
+                        setTokenAmount('');
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      placeholder={`Enter amount in ${currency === 'token' ? token.symbol : currency}`}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="font-semibold text-gray-900 dark:text-white">Amount of ({token.symbol})</label>
+                    <input
+                      type="number"
+                      value={tokenAmount}
+                      onChange={(e) => {
+                        setTokenAmount(e.target.value);
+                        setAmount('');
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      placeholder={`Enter amount in ${token.symbol}`}
+                      required
+                    />
+                  </div>
+  
+                  {currency === 'usd' ? (
+                    <>
+                      <div>
+                        <label className="font-semibold text-gray-900 dark:text-white">Admin USD Wallet Address</label>
+                        <input
+                          type="text"
+                          value={priceListData?.walletAddress}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          readOnly
+                        />
+                      </div>
+                      <div>
+                        <label className="font-semibold text-gray-900 dark:text-white">Network</label>
+                        <input
+                          type="text"
+                          value={priceListData?.network}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          readOnly
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="font-semibold text-gray-900 dark:text-white">Admin Account Number</label>
+                        <input
+                          type="text"
+                          value={priceListData?.accountNumber}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          readOnly
+                        />
+                      </div>
+                      <div>
+                        <label className="font-semibold text-gray-900 dark:text-white">Admin Account Name & Bank</label>
+                        <input
+                          type="text"
+                          value={priceListData?.accountNameAndBank}
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          readOnly
+                        />
+                      </div>
+                    </>
+                  )}
+  
+                  <div>
+                    <label className="font-semibold text-gray-900 dark:text-white">Your Wallet Address (To Receive Token)</label>
+                    <input
+                      type="text"
+                      value={userWalletAddress}
+                      onChange={(e) => setUserWalletAddress(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="font-semibold text-gray-900 dark:text-white">Your Network (To Receive Token)</label>
+                    <input
+                      type="text"
+                      value={userNetwork}
+                      onChange={(e) => setUserNetwork(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      required
+                    />
+                  </div>
+                </>
+              )}
+  
+              {action === 'sell' && (
+                <>
+                  <div>
+                    <label className="font-semibold text-gray-900 dark:text-white">Amount ({token.symbol})</label>
+                    <input
+                      type="number"
+                      value={tokenAmount}
+                      onChange={(e) => {
+                        setTokenAmount(e.target.value);
+                        setAmount('');
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      placeholder={`Enter amount in ${token.symbol}`}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="font-semibold text-gray-900 dark:text-white">Amount in Naira</label>
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => {
+                        setAmount(e.target.value);
+                        setTokenAmount('');
+                      }}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      placeholder="Enter amount in Naira"
+                      required
+                      disabled
+                    />
+                  </div>
+  
+                  <div>
+                    <label className="font-semibold text-gray-900 dark:text-white">Admin Account Number</label>
+                    <input
+                      type="text"
+                      value={priceListData?.accountNumber}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      readOnly
+                    />
+                  </div>
+                  <div>
+                    <label className="font-semibold text-gray-900 dark:text-white">Admin Account Name & Bank</label>
+                    <input
+                      type="text"
+                      value={priceListData?.accountNameAndBank}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                      readOnly
+                    />
+                  </div>
+                </>
+              )}
+  
+              <button
+                type="submit"
+                className="w-full px-4 py-2 bg-[#FF900D] dark:bg-[#FF900D] text-white font-semibold rounded-md shadow-sm hover:bg-[#FF900D]/70 dark:hover:bg-[#FF900D]/80 focus:outline-none focus:ring-2 focus:ring-[#FF900D]/50 dark:focus:ring-[#FF900D]/60"
+              >
+                Place Order
+              </button>
+            </form>
           </div>
         </div>
       </div>
     </div>
   );
+  
 };
 
 export default TokenDetailsPage;

@@ -59,15 +59,15 @@ const CurrencyConverter = ({ initialCoin }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6">
-      <h2 className="text-2xl font-bold mb-4">Currency Converter</h2>
+    <div className="bg-white dark:bg-gray-900 sm:rounded-lg sm:shadow-lg p-6">
+      <h2 className="text-lg md:text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Currency Converter</h2>
       <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-4">
         <div className="w-full md:w-1/3">
-          <label className="block text-sm font-medium text-gray-700 mb-1">From</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From</label>
           <select
             value={fromCoin?.symbol}
             onChange={(e) => setFromCoin(coins.find(c => c.symbol === e.target.value))}
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF900D]"
+            className="w-full p-2 border rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#FF900D]"
           >
             {coins.map((coin) => (
               <option key={coin.symbol} value={coin.symbol}>
@@ -83,11 +83,11 @@ const CurrencyConverter = ({ initialCoin }) => {
           <FaExchangeAlt />
         </button>
         <div className="w-full md:w-1/3">
-          <label className="block text-sm font-medium text-gray-700 mb-1">To</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">To</label>
           <select
             value={toCoin?.symbol}
             onChange={(e) => setToCoin(coins.find(c => c.symbol === e.target.value))}
-            className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF900D]"
+            className="w-full p-2 border rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#FF900D]"
           >
             {coins.map((coin) => (
               <option key={coin.symbol} value={coin.symbol}>
@@ -98,16 +98,16 @@ const CurrencyConverter = ({ initialCoin }) => {
         </div>
       </div>
       <div className="mt-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
         <input
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF900D]"
+          className="w-full p-2 border rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#FF900D]"
         />
       </div>
       <div className="mt-4">
-        <p className="text-lg font-semibold">
+        <p className="text-sm md:text-lg font-semibold text-gray-900 dark:text-gray-100">
           {amount} {fromCoin?.symbol} = {convertedAmount.toFixed(6)} {toCoin?.symbol}
         </p>
       </div>

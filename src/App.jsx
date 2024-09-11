@@ -1,5 +1,5 @@
 // src/App.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -39,8 +39,8 @@ const App = () => {
     <Router>
       <ScrollToTop />
       <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow">
+        <Header/>
+        <main className="flex-grow bg-white dark:bg-gray-800">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/help" element={<HelpSupport />} />
@@ -53,8 +53,8 @@ const App = () => {
             />
             <Route path="/signin" element={<AuthPage />} />
             <Route
-              path="/dashboard"
-              element={isAdmin ? <AdminDashboard /> : <Navigate to="/" />}
+              path="/dashboard/*"
+              element={user ? <AdminDashboard /> : <Navigate to="/" />}
             />
             <Route
               path="/blogs"

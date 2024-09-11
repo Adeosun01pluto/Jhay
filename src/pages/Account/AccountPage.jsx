@@ -1,5 +1,3 @@
-// src/pages/Account/AccountPage.jsx
-
 import React, { useState, useEffect } from 'react';
 import { auth } from '../../firebase/firebase';
 import { updateUserProfile } from '../../helper/help';
@@ -36,45 +34,45 @@ const AccountPage = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white shadow-md rounded-md my-12">
-      <h2 className="text-2xl font-bold mb-6 text-center">Account Settings</h2>
+    <div className="max-w-xl mx-auto p-6 bg-white dark:bg-gray-900 shadow-md rounded-md my-12">
+      <h2 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-gray-100">Account Settings</h2>
       <form onSubmit={handleUpdateProfile} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Email (read-only)</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email (read-only)</label>
           <input
             type="email"
             value={auth.currentUser?.email || ''}
             readOnly
-            className="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm px-3 py-2 outline-none"
+            className="mt-1 block w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm px-3 py-2 outline-none text-gray-900 dark:text-gray-100"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Name</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm px-3 py-2 outline-none"
+            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm px-3 py-2 outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             placeholder="Enter your name"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Bio</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Bio</label>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm px-3 py-2 outline-none"
+            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm px-3 py-2 outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             placeholder="Tell us about yourself"
             rows={3}
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone Number</label>
           <input
             type="tel"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm px-3 py-2 outline-none"
+            className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-[#FF900D] focus:border-[#FF900D] sm:text-sm px-3 py-2 outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             placeholder="Enter your phone number"
           />
         </div>
